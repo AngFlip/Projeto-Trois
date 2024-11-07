@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tróis</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="image-container">
+        <img src="./imagem.png" alt="Imagem de fundo" class="background-image">
+        
+        <div class="button-container">
+            <button class="button" onclick="startGame()">Iniciar</button>
+            <a href="score.html" class="button">Ver Score</a>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+
+        function startGame() {
+            score = 0; 
+            alert("O jogo começou! O score foi zerado.");
+            setInterval(() => {
+                score += 0;
+                localStorage.setItem("score", score);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

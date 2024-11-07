@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score do Jogo</title>
+    <link rel="stylesheet" href="score.css">
+</head>
+<body>
+    <div class="image-container">
+        <img src="./imagem-score.png" alt="Imagem de fundo" class="background-image">
+        
+     
+    <div class="score-container">
+        <h2>Score Atual:</h2>
+        <p id="scoreDisplay">Carregando...</p>
+        <a href="Início.html" class="button">Voltar</a>
+    </div>
+
+    <script>
+        function loadScore() {
+            const score = localStorage.getItem("score");
+            if (score !== null) {
+                document.getElementById("scoreDisplay").innerText = "Score: " + score;
+            } else {
+                document.getElementById("scoreDisplay").innerText = "Score não encontrado.";
+            }
+        }
+
+        function goBack() {
+            window.location.href = "/Tróis/Início.html"; 
+        }
+
+        window.onload = loadScore;
+    </script>
+</body>
+</html>
