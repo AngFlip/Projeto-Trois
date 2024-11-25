@@ -13,9 +13,9 @@ assets = load_assets()
 board = Board(assets)
 players = PlayerManager(assets)
 
-# Adicionar algumas cartas à mesa
-remaining_cards = players.initialize_players()  # Já distribui as cartas para os jogadores
-board.board = remaining_cards  # Adiciona as cartas restantes no tabuleiro
+# Embaralha e distribui cartas
+remaining_cards = players.initialize_players()
+board.board = remaining_cards
 
 # Loop principal
 running = True
