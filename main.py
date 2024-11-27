@@ -1,8 +1,6 @@
 import pygame
-import random
 from settings import screen, init_pygame
 from assets import load_assets
-from board import Board
 from player import PlayerManager
 
 pygame.init()
@@ -10,12 +8,11 @@ pygame.init()
 # Inicializações
 init_pygame()
 assets = load_assets()
-board = Board(assets)
-players = PlayerManager(assets)
+player = PlayerManager(assets)
+background = pygame.image.load(assets["bg_image"])
 
 # Embaralha e distribui cartas
-remaining_cards = players.initialize_players()
-board.board = remaining_cards
+player.initialize_players()
 
 # Loop principal
 running = True
@@ -26,18 +23,15 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         else:
-                board.handle_event(event, mouse_pos)
-                players.handle_event(event, mouse_pos)
-
-    # Verificação de fim de jogo
-    players.check_game_end()
+            player.handle_event(event, mouse_pos)
 
     # Atualizar a tela
-    screen.fill((0, 100, 0))  # Cor de fundo
-    board.draw(mouse_pos)
-    players.draw_opponents()
-    players.draw(mouse_pos)  
-    players.draw_player_info()
+    screen.blit(background, (0, 0))
+    
+    player.draw_player_hand(mouse_pos)
+    player.draw_board(mouse_pos)
+    player.draw_decks()
+    player.draw_game_info()
 
     pygame.display.flip()
 
