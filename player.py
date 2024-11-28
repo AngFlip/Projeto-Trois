@@ -1,11 +1,10 @@
 import pygame
 import random
 import settings
-import time
 
 class PlayerManager:
-
-    def __init__(self, assets): 
+    def __init__(self, assets):
+        self.restart_requested = False 
         self.player = {
             "cartas": [],
              "pontos": 0,
@@ -15,25 +14,24 @@ class PlayerManager:
         self.turn_count = 1
         self.assets = assets
         self.button_rects = {}  # Inicializa os botões como um dicionário vazio
-        self.last_action_time = 0
-        self.action_delay = 5000
-
+        self.action_delay = 1000  # 1 segundo
+        self.validation_time = 0
+        self.waiting_for_validation = False
+        self.plus_point = False
+        self.win_condition = False
+        
     def initialize_players(self): 
         # Embaralha as cartas
         card_value = list(enumerate(list(range(1, 14)) * 3))
-        print("Iniciado: ", card_value)
         random.shuffle(card_value)
-        print("Embaralhado: ", card_value)
         
         card_quantity = 7
-
         self.player["cartas"] = card_value[:card_quantity]
         self.decks = [card_value[card_quantity * (i + 1):card_quantity * (i + 2)] for i in range(3)]
         self.board = card_value[card_quantity * 4:]
-        print("Monte: ", self.decks)
 
     def draw_board(self, mouse_pos):
-        # Desenha as cartas da mesa
+        # Distribui as cartas da mesa
         for i, card_tuple in enumerate(self.board):
             idx, card_value = card_tuple
             card_img = self.assets["card_closed"]
@@ -50,9 +48,8 @@ class PlayerManager:
 
             settings.screen.blit(card_img, (pos_x, pos_y))
 
-
     def draw_player_hand(self, mouse_pos):
-        # Desenha as cartas do jogador
+        # Distribui as cartas do jogador
         x_init = 50
         for i, card_tuple in enumerate(self.player["cartas"]): 
             card_img = self.assets["card_deck"][card_tuple[1]]
@@ -65,9 +62,8 @@ class PlayerManager:
 
             settings.screen.blit(card_img, (pos_x, pos_y))
 
-
     def draw_decks(self):
-        # Desenha os montes e seus botões
+        # Define os montes e seus botões
         for i in range(3):
             x = 50 + i * 385
             y = 50
@@ -83,13 +79,12 @@ class PlayerManager:
                 pos_y = y
                 settings.screen.blit(card_img, (pos_x, pos_y))
             
-            # Áreas clicáveis substituindo os botões
+            # Áreas dps botões
             left_button_area = pygame.Rect(45 + i * 385, 210, settings.BUTTON_WIDTH, settings.BUTTON_HEIGHT)
             right_button_area = pygame.Rect(45 + i * 385 + settings.BUTTON_WIDTH + settings.BUTTON_SPACE, 210, settings.BUTTON_WIDTH, settings.BUTTON_HEIGHT)
 
             self.button_rects[f"left_{i}"] = left_button_area
             self.button_rects[f"right_{i}"] = right_button_area
-
 
     def draw_game_info(self):
         x, y = 970, 340
@@ -101,9 +96,19 @@ class PlayerManager:
         points_text = font.render(f"{self.player['pontos']}", True, settings.WHITE)
         settings.screen.blit(points_text, (x, y + 135))
 
-
     def handle_event(self, event, mouse_pos):
         
+        if self.waiting_for_validation:
+            if pygame.time.get_ticks() - self.validation_time >= self.action_delay:
+                self.waiting_for_validation = False
+                # Remove cartas e limpa a seleção
+                if self.plus_point: self.remove_cards()
+                self.player["reveladas"].clear()
+                # Avança um turno
+                self.turn_count += 1 
+                print(f"Turno {self.turn_count} iniciado.")
+            return
+
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             card = None
 
@@ -146,26 +151,15 @@ class PlayerManager:
                         if card not in self.player["reveladas"]:
                             self.player["reveladas"].append(card)
                             print(f"Carta escolhida do monte {deck_idx}: {card}")
-   
-
-            print("Escolhas: ", self.player['reveladas'])
 
             # Verifica se fez as 3 jogadas e se as cartas são iguais
             if len(self.player["reveladas"]) == 3:
+                print("Escolhas: ", self.player['reveladas'])
+                self.waiting_for_validation = True
+                self.validation_time = pygame.time.get_ticks()
+
+                self.check_and_score()
                 
-
-                if len(set(self.player["reveladas"])) == 1:
-                    self.player["pontos"] += 1
-                    print("Ponto marcado! Todas as cartas são iguais.")
-
-                # Avança para o próximo turno
-                self.turn_count += 1
-
-                # Reseta a seleção de cartas
-                self.player["reveladas"].clear()
-
-                print(f"Turno {self.turn_count} iniciado.")
-        
 
     def reveal_card(self, deck_idx, choice):
         deck = self.decks[deck_idx]
@@ -180,3 +174,34 @@ class PlayerManager:
         revealed_cards.append(card)
 
         return card
+
+    def check_and_score(self):
+
+        if len(self.player["reveladas"]) == 3:
+            
+            self.plus_point = False
+            self.win_condition = False
+
+            card_values = [card[1] for card in self.player["reveladas"]]
+            if len(set(card_values)) == 1 and card_values[0] == 7:
+                self.win_condition = True
+            elif len(set(card_values)) == 1:
+                self.player["pontos"] += 1
+                self.plus_point = True
+                if self.player["pontos"] >= 7:
+                    self.win_condition = True
+
+                self.waiting_for_removal = True
+                self.validation_time = pygame.time.get_ticks()
+
+    def remove_cards(self):
+
+        for card in self.player["reveladas"]:
+            self.player["cartas"] = [c for c in self.player["cartas"] if c[0] != card[0]]
+
+        for card in self.player["reveladas"]:
+            self.board = [c for c in self.board if c[0] != card[0]]
+
+        for card in self.player["reveladas"]:
+            for deck in self.decks:
+                deck[:] = [c for c in deck if c[0] != card[0]]
