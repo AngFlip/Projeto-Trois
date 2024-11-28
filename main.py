@@ -11,6 +11,13 @@ STATE_END = "end"
 settings.init_pygame()
 assets = load_assets()
 
+pygame.mixer.music.stop()
+pygame.mixer.music.set_volume(0.3)
+pygame.mixer.music.load(assets["initial"])
+pygame.mixer.music.play(-1)
+
+click_sound = assets["click"]
+
 def show_start_screen(screen, assets):
     screen.blit(assets['start'], (0, 0))
     pygame.display.flip()
@@ -24,6 +31,7 @@ def show_end_screen(screen, assets, victory):
         end_image = assets['victory']
     else:
         end_image = assets['defeat']
+
     screen.blit(end_image, (0, 0))
     pygame.display.flip()
 
@@ -47,6 +55,7 @@ def main():
                     mouse_pos = event.pos
                     start_button_rect = pygame.Rect(settings.START_POS_X, settings.START_POS_Y, settings.START_WIDTH, settings.START_HEIGHT)
                     if start_button_rect.collidepoint(mouse_pos):
+                        click_sound.play()
                         game_state = STATE_PLAYING
                         player_manager = PlayerManager(assets)
                         player_manager.initialize_players()
@@ -57,16 +66,32 @@ def main():
                     if player_manager.win_condition:
                         victory = True
                         game_state = STATE_END
+
+                        pygame.mixer.music.stop()
+                        pygame.mixer.music.load(assets["win"])
+                        pygame.mixer.music.set_volume(0.3)
+                        pygame.mixer.music.play(-1)
+
                     elif player_manager.turn_count > 15:
                         victory = False
                         game_state = STATE_END
+
+                        pygame.mixer.music.set_volume(1.0)
+                        pygame.mixer.music.load(assets["lose"])
+                        pygame.mixer.music.play(-1)
 
             elif game_state == STATE_END:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = event.pos
                     restart_button_rect = pygame.Rect(settings.TRY_AGAIN_POS_X, settings.TRY_AGAIN_POS_Y,settings.TRY_AGAIN_WIDTH, settings.TRY_AGAIN_HEIGHT)
                     if restart_button_rect.collidepoint(mouse_pos):
+                        click_sound.play()
                         game_state = STATE_START
+
+                        pygame.mixer.music.stop()
+                        pygame.mixer.music.set_volume(0.3)
+                        pygame.mixer.music.load(assets["initial"])
+                        pygame.mixer.music.play(-1)
 
         # Renderizar a tela com base no estado atual
         if game_state == STATE_START:

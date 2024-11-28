@@ -19,6 +19,10 @@ class PlayerManager:
         self.waiting_for_validation = False
         self.plus_point = False
         self.win_condition = False
+
+        self.click_sound = assets["click"]
+        self.score_sound = assets["score"]
+        self.wrong_sound = assets["wrong"]
         
     def initialize_players(self): 
         # Embaralha as cartas
@@ -122,7 +126,7 @@ class PlayerManager:
 
                 if card_rect.collidepoint(mouse_pos) and not any(revealed[0] == idx for revealed in self.player["reveladas"]):
                     self.player["reveladas"].append(card_tuple)
-                    print(f"Carta escolhida da mesa: {idx} - {card_value}")
+                    self.click_sound.play()
                     break
 
             # Verifica se houve cliques nas cartas da mão do jogador
@@ -135,12 +139,13 @@ class PlayerManager:
 
                 if card_rect.collidepoint(mouse_pos) and idx not in self.player["reveladas"]:
                     self.player["reveladas"].append(card_tuple)
-                    print(f"Carta escolhida da mão do jogador: {idx} - {card_value}")
+                    self.click_sound.play()
                     break
 
             # Verifica se houve cliques nos botões  
             for key, button_rect in self.button_rects.items():
                 if button_rect.collidepoint(mouse_pos):
+                    self.click_sound.play()
                     side, deck_idx = key.split("_")
                     deck_idx = int(deck_idx)
 
@@ -150,7 +155,6 @@ class PlayerManager:
                     if card is not None:
                         if card not in self.player["reveladas"]:
                             self.player["reveladas"].append(card)
-                            print(f"Carta escolhida do monte {deck_idx}: {card}")
 
             # Verifica se fez as 3 jogadas e se as cartas são iguais
             if len(self.player["reveladas"]) == 3:
@@ -185,14 +189,18 @@ class PlayerManager:
             card_values = [card[1] for card in self.player["reveladas"]]
             if len(set(card_values)) == 1 and card_values[0] == 7:
                 self.win_condition = True
+                self.score_sound.play()
             elif len(set(card_values)) == 1:
                 self.player["pontos"] += 1
                 self.plus_point = True
+                self.score_sound.play()
                 if self.player["pontos"] >= 7:
                     self.win_condition = True
+            else:
+                self.wrong_sound.play()
 
-                self.waiting_for_removal = True
-                self.validation_time = pygame.time.get_ticks()
+            self.waiting_for_removal = True
+            self.validation_time = pygame.time.get_ticks()
 
     def remove_cards(self):
 

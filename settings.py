@@ -38,3 +38,4 @@ pygame.display.set_caption("Trois")
 
 def init_pygame():
     pygame.init()
+    pygame.mixer.init()
